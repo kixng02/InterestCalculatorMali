@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 
 type CompoundInterval = 'annually' | 'monthly' | 'daily';
 
+const yearIntervals = [1, 15, 30, 45, 60, 75];
+
 export default function InterestCalculator() {
   const [principal, setPrincipal] = useState<string>('10000');
   const [annualRate, setAnnualRate] = useState<string>('5');
@@ -196,6 +198,11 @@ export default function InterestCalculator() {
             step={1}
             aria-label={`Investment timeframe: ${years[0]} years`}
           />
+          <div className="flex justify-between text-xs text-muted-foreground px-1">
+            {yearIntervals.map((value) => (
+              <span key={value}>{value}</span>
+            ))}
+          </div>
         </div>
       </CardContent>
       <Separator className="my-6" />
