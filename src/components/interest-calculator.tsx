@@ -1,6 +1,6 @@
 
 "use client";
-
+import { usePDF } from 'react-to-pdf';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
+import { Button } from './ui/button';
 type CompoundInterval = 'annually' | 'monthly' | 'daily';
 
 const yearIntervals = [1, 15, 30, 45, 60, 75];
@@ -26,6 +26,12 @@ export default function InterestCalculator() {
 
   const [totalBalance, setTotalBalance] = useState<number>(0);
   const [interestEarned, setInterestEarned] = useState<number>(0);
+
+  useEffect(() => {
+    setPrincipal('');
+    setAnnualRate('');
+    setYears([1]); // Or perhaps a default value that makes sense
+  }, []); // Empty dependency array ensures this runs only on mount
 
   const createInputHandler = (
     setValue: React.Dispatch<React.SetStateAction<string>>,
@@ -129,14 +135,20 @@ export default function InterestCalculator() {
     });
   };
 
+  const { targetRef, toPDF } = usePDF({filename: 'ai-interest-math-report.pdf'});
+  
+  const handleDownload = () => {
+    toPDF();
+  };
+  
   return (
     <Card className="w-full max-w-lg shadow-xl">
-      <CardHeader>
-        <CardTitle className="text-3xl font-headline text-primary">FutureSight</CardTitle>
+ <CardHeader>
+        <CardTitle className="text-3xl font-headline text-primary">A.I interest-math</CardTitle>
         <CardDescription className="text-lg">Compound Interest Calculator</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
+ <div className="space-y-2">
           <Label htmlFor="principal" className="font-semibold">Principal Amount ($)</Label>
           <div className="flex items-center space-x-2">
             <Input
@@ -153,7 +165,7 @@ export default function InterestCalculator() {
           {principalError && <p id="principal-error-message" className="text-sm text-destructive">{principalError}</p>}
         </div>
 
-        <div className="space-y-2">
+ <div className="space-y-2">
           <Label htmlFor="annualRate" className="font-semibold">Annual Interest Rate (%)</Label>
           <div className="flex items-center space-x-2">
             <Input
@@ -170,7 +182,7 @@ export default function InterestCalculator() {
           {annualRateError && <p id="annualRate-error-message" className="text-sm text-destructive">{annualRateError}</p>}
         </div>
 
-        <div className="space-y-2">
+ <div className="space-y-2">
           <Label htmlFor="compoundInterval" className="font-semibold">Compound Interval</Label>
           <Select value={compoundInterval} onValueChange={(value: CompoundInterval) => setCompoundInterval(value)}>
             <SelectTrigger id="compoundInterval">
@@ -184,7 +196,7 @@ export default function InterestCalculator() {
           </Select>
         </div>
 
-        <div className="space-y-2">
+ <div className="space-y-2">
           <div className="flex justify-between items-center">
             <Label htmlFor="years" className="font-semibold">Investment Timeframe (Years)</Label>
             <span className="text-sm text-muted-foreground">{years[0]} Year{years[0] === 1 ? '' : 's'}</span>
@@ -207,14 +219,47 @@ export default function InterestCalculator() {
       </CardContent>
       <Separator className="my-6" />
       <CardFooter className="flex flex-col items-start space-y-4">
-        <div className="w-full">
-          <p className="text-sm text-muted-foreground">Projected Interest Earned:</p>
-          <p className="text-2xl font-bold text-accent">{formatCurrency(interestEarned)}</p>
+      <div ref={targetRef} className="w-full space-y-4"> {/* Corrected ref usage */}
+        <h2 className="text-2xl font-bold mb-4">A.I interest-math Compound Interest Report</h2>
+
+        <div className="space-y-2 mb-4">
+          <p><strong>Principal Amount:</strong> {formatCurrency(parseFloat(principal))}</p>
+          <p><strong>Annual Interest Rate:</strong> {annualRate}%</p>
+          <p><strong>Investment Timeframe:</strong> {years[0]} years</p>
+          <p><strong>Compound Interval:</strong> {compoundInterval.charAt(0).toUpperCase() + compoundInterval.slice(1)}ly</p>
         </div>
-        <div className="w-full">
-          <p className="text-sm text-muted-foreground">Total Future Balance:</p>
-          <p className="text-3xl font-bold text-primary">{formatCurrency(totalBalance)}</p>
+
+        <Separator className="my-4" />
+
+        <h3 className="text-xl font-semibold mb-2">Calculation Details</h3>
+
+        <div className="space-y-2">
+          <p>The compound interest formula is:</p>
+          <p className="font-mono">A = P(1 + r/n)^(nt)</p>
+          <p>Where:</p>
+          <ul className="list-disc list-inside ml-4">
+            <li>A = the future value of the investment/loan, including interest</li>
+            <li>P = principal investment amount ({formatCurrency(parseFloat(principal))})</li>
+            <li>r = annual interest rate as a decimal ({parseFloat(annualRate) / 100})</li>
+            <li>n = the number of times that interest is compounded per year ({
+                compoundInterval === 'annually' ? 1 : compoundInterval === 'monthly' ? 12 : (compoundInterval === 'daily' ? 365 : '')
+            })</li>
+            <li>t = the number of years the money is invested or borrowed for ({years[0]})</li>
+          </ul>
         </div>
+
+        <Separator className="my-4" />
+
+        <div className="space-y-2">
+          <p><strong>Projected Interest Earned:</strong> {formatCurrency(interestEarned)}</p>
+          <p><strong>Total Future Balance:</strong> {formatCurrency(totalBalance)}</p>
+        </div>
+      </div>
+
+        {/* Download Button */}
+ <Button onClick={handleDownload} className="w-full mt-4">
+          Download workings as PDF
+        </Button>
       </CardFooter>
     </Card>
   );
