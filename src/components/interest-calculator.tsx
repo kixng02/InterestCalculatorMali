@@ -28,9 +28,12 @@ export default function InterestCalculator() {
   const [interestEarned, setInterestEarned] = useState<number>(0);
 
   useEffect(() => {
-    setPrincipal('');
+    // Initialize with empty strings or default values that trigger calculation
+    // For example, setting to '0' or valid initial values if preferred
+    setPrincipal(''); 
     setAnnualRate('');
-    setYears([1]); // Or perhaps a default value that makes sense
+    setYears([1]); // Default to 1 year or a sensible minimum
+    // No need to explicitly call calculateInterest here if useEffect for it depends on these states
   }, []); // Empty dependency array ensures this runs only on mount
 
   const createInputHandler = (
@@ -76,15 +79,17 @@ export default function InterestCalculator() {
   const handleAnnualRateChange = createInputHandler(setAnnualRate, setAnnualRateError, 'Annual Interest Rate');
 
   const calculateInterest = useCallback(() => {
-    if (principalError || annualRateError) {
-      const P_val = parseFloat(principal);
-      setTotalBalance( (principalError || isNaN(P_val) || P_val < 0) ? 0 : P_val);
+    const P_val = parseFloat(principal);
+    const rate_val = parseFloat(annualRate);
+
+    if (principalError || annualRateError || principal === "" || annualRate === "") {
+      setTotalBalance( (principalError || isNaN(P_val) || P_val < 0 || principal === "") ? 0 : P_val);
       setInterestEarned(0);
       return;
     }
 
-    const P = parseFloat(principal);
-    const ratePercent = parseFloat(annualRate);
+    const P = P_val;
+    const ratePercent = rate_val;
     const t = years[0];
 
     if (isNaN(P) || P <= 0 || isNaN(ratePercent) || ratePercent < 0 || isNaN(t) || t < 0) {
@@ -127,6 +132,7 @@ export default function InterestCalculator() {
   }, [calculateInterest]);
 
   const formatCurrency = (value: number) => {
+    if (isNaN(value)) return '$0.00'; // Handle NaN case gracefully
     return value.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -143,12 +149,12 @@ export default function InterestCalculator() {
   
   return (
     <Card className="w-full max-w-lg shadow-xl">
- <CardHeader>
+      <CardHeader>
         <CardTitle className="text-3xl font-headline text-primary">A.I interest-math</CardTitle>
         <CardDescription className="text-lg">Compound Interest Calculator</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
- <div className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="principal" className="font-semibold">Principal Amount ($)</Label>
           <div className="flex items-center space-x-2">
             <Input
@@ -165,7 +171,7 @@ export default function InterestCalculator() {
           {principalError && <p id="principal-error-message" className="text-sm text-destructive">{principalError}</p>}
         </div>
 
- <div className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="annualRate" className="font-semibold">Annual Interest Rate (%)</Label>
           <div className="flex items-center space-x-2">
             <Input
@@ -182,7 +188,7 @@ export default function InterestCalculator() {
           {annualRateError && <p id="annualRate-error-message" className="text-sm text-destructive">{annualRateError}</p>}
         </div>
 
- <div className="space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="compoundInterval" className="font-semibold">Compound Interval</Label>
           <Select value={compoundInterval} onValueChange={(value: CompoundInterval) => setCompoundInterval(value)}>
             <SelectTrigger id="compoundInterval">
@@ -196,7 +202,7 @@ export default function InterestCalculator() {
           </Select>
         </div>
 
- <div className="space-y-2">
+        <div className="space-y-2">
           <div className="flex justify-between items-center">
             <Label htmlFor="years" className="font-semibold">Investment Timeframe (Years)</Label>
             <span className="text-sm text-muted-foreground">{years[0]} Year{years[0] === 1 ? '' : 's'}</span>
@@ -218,47 +224,52 @@ export default function InterestCalculator() {
         </div>
       </CardContent>
       <Separator className="my-6" />
-      <CardFooter className="flex flex-col items-start space-y-4">
-      <div ref={targetRef} className="w-full space-y-4"> {/* Corrected ref usage */}
-        <h2 className="text-2xl font-bold mb-4">A.I interest-math Compound Interest Report</h2>
+      <CardFooter className="flex flex-col items-start space-y-4 px-6 pb-6">
+        <div className="w-full space-y-3 mb-6">
+          <div>
+            <p className="text-muted-foreground">Projected Interest Earned:</p>
+            <p className="text-3xl font-bold text-accent">{formatCurrency(interestEarned)}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Total Future Balance:</p>
+            <p className="text-3xl font-bold text-accent">{formatCurrency(totalBalance)}</p>
+          </div>
+        </div>
+        
+        <Separator className="my-6" />
 
-        <div className="space-y-2 mb-4">
-          <p><strong>Principal Amount:</strong> {formatCurrency(parseFloat(principal))}</p>
-          <p><strong>Annual Interest Rate:</strong> {annualRate}%</p>
-          <p><strong>Investment Timeframe:</strong> {years[0]} years</p>
-          <p><strong>Compound Interval:</strong> {compoundInterval.charAt(0).toUpperCase() + compoundInterval.slice(1)}ly</p>
+        <div ref={targetRef} className="w-full space-y-4">
+          <h2 className="text-2xl font-bold text-primary mb-4">A.I interest-math Compound Interest Report</h2>
+
+          <div className="space-y-2 mb-4">
+            <p><strong className="text-foreground">Principal Amount:</strong> {formatCurrency(parseFloat(principal))}</p>
+            <p><strong className="text-foreground">Annual Interest Rate:</strong> {annualRate || '0'}%</p>
+            <p><strong className="text-foreground">Investment Timeframe:</strong> {years[0]} years</p>
+            <p><strong className="text-foreground">Compound Interval:</strong> {compoundInterval.charAt(0).toUpperCase() + compoundInterval.slice(1)}ly</p>
+          </div>
+
+          <Separator className="my-4" />
+
+          <h3 className="text-xl font-semibold text-primary mb-2">Calculation Formula</h3>
+
+          <div className="space-y-2 text-sm">
+            <p className="text-foreground">The compound interest formula used is:</p>
+            <p className="font-mono p-2 bg-muted rounded-md text-center">A = P (1 + r/n)^(nt)</p>
+            <p className="text-foreground">Where:</p>
+            <ul className="list-disc list-inside ml-4 space-y-1 text-muted-foreground">
+              <li>A = the future value of the investment/loan, including interest</li>
+              <li>P = principal investment amount ({formatCurrency(parseFloat(principal))})</li>
+              <li>r = annual interest rate as a decimal ({(parseFloat(annualRate) / 100) || 0})</li>
+              <li>n = number of times interest is compounded per year ({
+                  compoundInterval === 'annually' ? 1 : compoundInterval === 'monthly' ? 12 : (compoundInterval === 'daily' ? 365 : 'N/A')
+              })</li>
+              <li>t = number of years the money is invested or borrowed for ({years[0]})</li>
+            </ul>
+          </div>
         </div>
 
-        <Separator className="my-4" />
-
-        <h3 className="text-xl font-semibold mb-2">Calculation Details</h3>
-
-        <div className="space-y-2">
-          <p>The compound interest formula is:</p>
-          <p className="font-mono">A = P(1 + r/n)^(nt)</p>
-          <p>Where:</p>
-          <ul className="list-disc list-inside ml-4">
-            <li>A = the future value of the investment/loan, including interest</li>
-            <li>P = principal investment amount ({formatCurrency(parseFloat(principal))})</li>
-            <li>r = annual interest rate as a decimal ({parseFloat(annualRate) / 100})</li>
-            <li>n = the number of times that interest is compounded per year ({
-                compoundInterval === 'annually' ? 1 : compoundInterval === 'monthly' ? 12 : (compoundInterval === 'daily' ? 365 : '')
-            })</li>
-            <li>t = the number of years the money is invested or borrowed for ({years[0]})</li>
-          </ul>
-        </div>
-
-        <Separator className="my-4" />
-
-        <div className="space-y-2">
-          <p><strong>Projected Interest Earned:</strong> {formatCurrency(interestEarned)}</p>
-          <p><strong>Total Future Balance:</strong> {formatCurrency(totalBalance)}</p>
-        </div>
-      </div>
-
-        {/* Download Button */}
- <Button onClick={handleDownload} className="w-full mt-4">
-          Download workings as PDF
+        <Button onClick={handleDownload} className="w-full mt-6 py-3 text-base">
+          Download Report as PDF
         </Button>
       </CardFooter>
     </Card>
