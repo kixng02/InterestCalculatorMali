@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-type CompoundInterval = 'annually' | 'monthly' | 'daily';
+type CompoundInterval = 'annually' | 'monthly' | 'daily' | 'quarterly';
 
 const yearIntervals = [1, 15, 30, 45, 60, 75];
 
@@ -106,6 +106,9 @@ export default function InterestCalculator() {
       case 'monthly':
         n = 12;
         break;
+      case 'quarterly':
+        n = 4;
+        break;
       case 'annually':
       default:
         n = 1;
@@ -196,6 +199,7 @@ export default function InterestCalculator() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="annually">Annually</SelectItem>
+              <SelectItem value="quarterly">Quarterly</SelectItem>
               <SelectItem value="monthly">Monthly</SelectItem>
               <SelectItem value="daily">Daily</SelectItem>
             </SelectContent>
@@ -222,10 +226,7 @@ export default function InterestCalculator() {
             ))}
           </div>
         </div>
-      </CardContent>
-      <Separator className="my-6" />
-      <CardFooter className="flex flex-col items-start space-y-4 px-6 pb-6">
-        <div className="w-full space-y-3 mb-6">
+         <div className="w-full space-y-3 pt-6">
           <div>
             <p className="text-muted-foreground">Projected Interest Earned:</p>
             <p className="text-3xl font-bold text-accent">{formatCurrency(interestEarned)}</p>
@@ -235,6 +236,10 @@ export default function InterestCalculator() {
             <p className="text-3xl font-bold text-accent">{formatCurrency(totalBalance)}</p>
           </div>
         </div>
+      </CardContent>
+      <Separator className="my-6" />
+      <CardFooter className="flex flex-col items-start space-y-4 px-6 pb-6">
+       
         
         <Separator className="my-6" />
 
@@ -245,7 +250,7 @@ export default function InterestCalculator() {
             <p><strong className="text-foreground">Principal Amount:</strong> {formatCurrency(parseFloat(principal))}</p>
             <p><strong className="text-foreground">Annual Interest Rate:</strong> {annualRate || '0'}%</p>
             <p><strong className="text-foreground">Investment Timeframe:</strong> {years[0]} years</p>
-            <p><strong className="text-foreground">Compound Interval:</strong> {compoundInterval.charAt(0).toUpperCase() + compoundInterval.slice(1)}ly</p>
+            <p><strong className="text-foreground">Compound Interval:</strong> {compoundInterval.charAt(0).toUpperCase() + compoundInterval.slice(1)}</p>
           </div>
 
           <Separator className="my-4" />
@@ -261,7 +266,10 @@ export default function InterestCalculator() {
               <li>P = principal investment amount ({formatCurrency(parseFloat(principal))})</li>
               <li>r = annual interest rate as a decimal ({(parseFloat(annualRate) / 100) || 0})</li>
               <li>n = number of times interest is compounded per year ({
-                  compoundInterval === 'annually' ? 1 : compoundInterval === 'monthly' ? 12 : (compoundInterval === 'daily' ? 365 : 'N/A')
+                  compoundInterval === 'annually' ? 1 : 
+                  compoundInterval === 'quarterly' ? 4 :
+                  compoundInterval === 'monthly' ? 12 : 
+                  (compoundInterval === 'daily' ? 365 : 'N/A')
               })</li>
               <li>t = number of years the money is invested or borrowed for ({years[0]})</li>
             </ul>
@@ -275,3 +283,4 @@ export default function InterestCalculator() {
     </Card>
   );
 }
+
