@@ -16,8 +16,8 @@ type CompoundInterval = 'annually' | 'monthly' | 'daily' | 'quarterly';
 const yearIntervals = [1, 15, 30, 45, 60, 75];
 
 export default function InterestCalculator() {
-  const [principal, setPrincipal] = useState<string>('10000');
-  const [annualRate, setAnnualRate] = useState<string>('5');
+  const [principal, setPrincipal] = useState<string>('');
+  const [annualRate, setAnnualRate] = useState<string>('');
   const [years, setYears] = useState<number[]>([10]);
   const [compoundInterval, setCompoundInterval] = useState<CompoundInterval>('annually');
 
@@ -28,13 +28,10 @@ export default function InterestCalculator() {
   const [interestEarned, setInterestEarned] = useState<number>(0);
 
   useEffect(() => {
-    // Initialize with empty strings or default values that trigger calculation
-    // For example, setting to '0' or valid initial values if preferred
     setPrincipal(''); 
     setAnnualRate('');
-    setYears([1]); // Default to 1 year or a sensible minimum
-    // No need to explicitly call calculateInterest here if useEffect for it depends on these states
-  }, []); // Empty dependency array ensures this runs only on mount
+    setYears([1]); 
+  }, []); 
 
   const createInputHandler = (
     setValue: React.Dispatch<React.SetStateAction<string>>,
@@ -135,7 +132,7 @@ export default function InterestCalculator() {
   }, [calculateInterest]);
 
   const formatCurrency = (value: number) => {
-    if (isNaN(value)) return '$0.00'; // Handle NaN case gracefully
+    if (isNaN(value)) return '$0.00'; 
     return value.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -149,6 +146,8 @@ export default function InterestCalculator() {
   const handleDownload = () => {
     toPDF();
   };
+
+  const isDownloadDisabled = principal === "" || annualRate === "" || !!principalError || !!annualRateError;
   
   return (
     <Card className="w-full max-w-lg shadow-xl">
@@ -241,8 +240,6 @@ export default function InterestCalculator() {
       <CardFooter className="flex flex-col items-start space-y-4 px-6 pb-6">
        
         
-        <Separator className="my-6" />
-
         <div ref={targetRef} className="w-full space-y-4">
           <h2 className="text-2xl font-bold text-primary mb-4">A.I interest-math Compound Interest Report</h2>
 
@@ -276,7 +273,11 @@ export default function InterestCalculator() {
           </div>
         </div>
 
-        <Button onClick={handleDownload} className="w-full mt-6 py-3 text-base">
+        <Button 
+          onClick={handleDownload} 
+          className="w-full mt-6 py-3 text-base"
+          disabled={isDownloadDisabled}
+        >
           Download Report as PDF
         </Button>
       </CardFooter>
